@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { contentAnalysisService } from '@/lib/ai/content-analysis';
 import { createServerClient } from '@/lib/supabase/server';
 import { handleApiError } from '@/lib/error-handler';
-import { AppError, UnauthorizedError, BadRequestError } from '@/lib/errors';
+import { AppError, UnauthorizedError, BadRequestError, NotFoundError } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   try {
