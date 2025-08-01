@@ -81,7 +81,7 @@ export default function ExplorUsersPage() {
 
         const followingSet = new Set(followingData?.map(f => f.following_id) || [])
         
-        data.forEach(userData => {
+        data.forEach((userData: any) => {
           userData.is_following = followingSet.has(userData.id)
         })
       }

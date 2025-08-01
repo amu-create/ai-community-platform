@@ -69,7 +69,16 @@ export function PostList({ userId, type }: PostListProps) {
         const { data, error } = await query
 
         if (error) throw error
-        setPosts(data || [])
+        
+        // Transform data to fix author type
+        const transformedData = (data || []).map((post: any) => ({
+          id: post.id,
+          content: post.content,
+          created_at: post.created_at,
+          author: Array.isArray(post.author) ? post.author[0] : post.author
+        }))
+        
+        setPosts(transformedData)
       } catch (error) {
         console.error('게시물 불러오기 실패:', error)
       } finally {
