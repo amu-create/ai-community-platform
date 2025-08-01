@@ -54,12 +54,12 @@ export async function GET(request: Request) {
     if (error) throw error
 
     // Transform the data
-    const resources = bookmarks.map(bookmark => ({
+    const resources = bookmarks?.map((bookmark: any) => ({
       ...bookmark.resource,
       isBookmarked: true,
       bookmarkedAt: bookmark.created_at,
-      author: bookmark.resource.profiles?.[0] || null
-    }))
+      author: bookmark.resource?.profiles?.[0] || null
+    })) || []
 
     return NextResponse.json({
       resources,
