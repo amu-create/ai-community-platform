@@ -1,0 +1,27 @@
+{
+  "name": "AI Community Platform",
+  "short_name": "AI Community",
+  "description": "Learn, share, and grow together in AI. Connect with fellow AI enthusiasts, share resources, and build your knowledge.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "ko-KR",
+  "dir": "ltr"
+}

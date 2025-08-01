@@ -1,0 +1,134 @@
+name: Scheduled Tasks
+
+on:
+  schedule:
+    # 매일 오전 9시 (KST) 실행
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  # 의존성 업데이트 체크
+  dependency-updates:
+    name: Check Dependency Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Check for updates
+        run: |
+          npx npm-check-updates --format json > updates.json
+          
+      - name: Create issue for updates
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const updates = JSON.parse(fs.readFileSync('updates.json', 'utf8'));
+            
+            if (Object.keys(updates).length > 0) {
+              const body = `## 🔄 Dependency Updates Available\n\n${
+                Object.entries(updates).map(([pkg, version]) => 
+                  `- **${pkg}**: ${version}`
+                ).join('\n')
+              }`;
+              
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '📦 Weekly Dependency Updates',
+                body: body,
+                labels: ['dependencies', 'maintenance']
+              });
+            }
+
+  # 데이터베이스 백업
+  database-backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Backup database
+        run: |
+          DATE=$(date +%Y%m%d)
+          supabase db dump -f backup-$DATE.sql
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Upload backup to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --follow-symlinks
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SOURCE_DIR: './backup-*.sql'
+          DEST_DIR: 'backups/'
+
+  # 성능 모니터링
+  performance-check:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Run Lighthouse on production
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: |
+            https://your-production-url.vercel.app
+            https://your-production-url.vercel.app/resources
+            https://your-production-url.vercel.app/community
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Check performance thresholds
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Performance 점수가 90 미만이면 알림
+            const results = require('./lighthouse-results.json');
+            const lowScores = results.filter(r => r.categories.performance.score < 0.9);
+            
+            if (lowScores.length > 0) {
+              // Slack 또는 이메일로 알림
+              console.log('Performance degradation detected!');
+            }
+
+  # 주간 베스트 콘텐츠 집계
+  weekly-best-content:
+    name: Calculate Weekly Best Content
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 0 * * 0' # 일요일에만 실행
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Run weekly aggregation
+        run: |
+          node scripts/calculate-weekly-best.js
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

@@ -1,0 +1,27 @@
+# *
+User-agent: *
+Allow: /
+
+# Bots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: bingbot
+Allow: /
+Crawl-delay: 1
+
+# Disallow certain paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /static/
+Disallow: /*.json$
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+
+# Allow specific API endpoints for search
+Allow: /api/search
+
+# Sitemap
+Sitemap: https://ai-community.vercel.app/sitemap.xml
