@@ -36,7 +36,7 @@ export async function GET(request: Request) {
           p_timeframe: timeframe
         })
       
-      const userRankData = allRanks?.find(u => u.user_id === user.id)
+      const userRankData = allRanks?.find((u: any) => u.user_id === user.id)
       if (userRankData) {
         userRank = {
           ...userRankData,
