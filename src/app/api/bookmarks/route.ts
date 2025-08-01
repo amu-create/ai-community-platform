@@ -58,7 +58,7 @@ export async function GET(request: Request) {
       ...bookmark.resource,
       isBookmarked: true,
       bookmarkedAt: bookmark.created_at,
-      author: bookmark.resource.profiles
+      author: bookmark.resource.profiles?.[0] || null
     }))
 
     return NextResponse.json({
