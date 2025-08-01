@@ -37,6 +37,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# private documentation and reports
+private-docs/
+reports/
+
 # IDE
 .vscode/
 .idea/
