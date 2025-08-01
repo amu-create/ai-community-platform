@@ -14,7 +14,6 @@ interface FollowingPageProps {
 
 export async function generateMetadata({ params }: FollowingPageProps) {
   const resolvedParams = await params;
-  const resolvedParams = await params
   return {
     title: `@${resolvedParams.username}의 팔로잉 - AI Community`,
   }
@@ -22,7 +21,7 @@ export async function generateMetadata({ params }: FollowingPageProps) {
 
 export default async function FollowingPage({ params }: FollowingPageProps) {
   const resolvedParams = await params;
-  const { username } = await params
+  const { username } = resolvedParams
   const supabase = createServerComponentClient({ cookies })
   
   // 사용자 정보 가져오기
