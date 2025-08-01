@@ -9,8 +9,8 @@ import { FollowButton } from '@/components/FollowButton'
 import { Search, Users, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useAuth } from '@/contexts/AuthContext'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAuthStore } from '@/store/authStore'
 
 interface User {
   id: string
@@ -29,7 +29,7 @@ export default function ExplorUsersPage() {
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
-  const { user } = useAuth()
+  const { user } = useAuthStore()
   const supabase = createClientComponentClient()
   const limit = 20
 

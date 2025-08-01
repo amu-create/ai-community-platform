@@ -36,7 +36,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
   const { query, category, tags, sort = 'recent', page = 1, limit = 20 } = queryValidation.data;
   
   // Supabase 클라이언트 생성
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -103,7 +103,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
   const resources = data?.map((resource) => {
     const ratings = resource.ratings || [];
     const avgRating = ratings.length > 0
-      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      ? ratings.reduce((sum: number, r: any) => sum + r.rating, 0) / ratings.length
       : 0;
     
     return {
@@ -171,7 +171,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
   const { title, description, url, category, tags = [] } = bodyValidation.data;
   
   // 인증 확인
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -187,7 +187,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   
   if (authError || !user) {
-    throw new AuthenticationError();
+    throw new AuthenticationError('Unauthorized');
   }
   
   // 중복 URL 확인
@@ -198,7 +198,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
     .single();
   
   if (existingResource) {
-    throw new DuplicateError('리소스', 'URL');
+    throw new DuplicateError('리소스 URL이 이미 존재합니다');
   }
   
   // 리소스 생성
