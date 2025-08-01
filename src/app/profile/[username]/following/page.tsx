@@ -7,25 +7,29 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 interface FollowingPageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: FollowingPageProps) {
+  const resolvedParams = await params;
+  const resolvedParams = await params
   return {
-    title: `@${params.username}의 팔로잉 - AI Community`,
+    title: `@${resolvedParams.username}의 팔로잉 - AI Community`,
   }
 }
 
 export default async function FollowingPage({ params }: FollowingPageProps) {
+  const resolvedParams = await params;
+  const { username } = await params
   const supabase = createServerComponentClient({ cookies })
   
   // 사용자 정보 가져오기
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('id, username, following_count')
-    .eq('username', params.username)
+    .eq('username', resolvedParams.username)
     .single()
 
   if (error || !profile) {
@@ -35,7 +39,7 @@ export default async function FollowingPage({ params }: FollowingPageProps) {
   return (
     <div className="container max-w-2xl mx-auto py-8">
       <div className="mb-6">
-        <Link href={`/profile/${params.username}`}>
+        <Link href={`/profile/${resolvedParams.username}`}>
           <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             프로필로 돌아가기

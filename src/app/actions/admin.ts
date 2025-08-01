@@ -1,13 +1,12 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { AdminStats, UserActivity, TopContent, UserGrowth, AdminUser } from '@/types/admin';
 
 // 관리자 권한 확인
 async function checkAdminAuth() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
@@ -167,7 +166,7 @@ export async function toggleUserStatus(
     // Supabase Auth Admin API를 통해 사용자 상태 업데이트
     // 주의: 이 기능은 Supabase 대시보드에서 Service Role 키가 필요합니다
     const { error } = await supabase.auth.admin.updateUserById(userId, {
-      ban_duration: suspend ? `${days * 24}h` : undefined
+      ban_duration: suspend && days ? `${days * 24}h` : undefined
     });
     
     if (error) throw error;

@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createClient()
+  const supabase = createServerClient()
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community.vercel.app'
 
   // 정적 페이지들

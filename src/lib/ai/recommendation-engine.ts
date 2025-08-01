@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -28,7 +28,7 @@ interface UserPreferences {
 }
 
 export class AIRecommendationEngine {
-  private supabase = createClient();
+  private supabase = createServerClient();
 
   async analyzeUserBehavior(userId: string): Promise<UserPreferences> {
     // 사용자 활동 데이터 수집

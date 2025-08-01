@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import type { Resource, ResourceFormData, ResourceFilters } from '@/types/resource';
 
 export class ResourceService {
-  private supabase = createClient();
+  private supabase = supabase;
 
   // 리소스 목록 조회
   async getResources(filters: ResourceFilters = {}, page = 1, limit = 20) {

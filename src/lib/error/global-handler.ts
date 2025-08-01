@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { logger } from '@/lib/error/logger';
-import { AppError } from '@/lib/error/errors';
+import { AppError } from '@/lib/errors';
 
 // 전역 에러 핸들러 설정
 export function useGlobalErrorHandler() {

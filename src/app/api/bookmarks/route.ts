@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     const { resourceId } = await request.json()
 
     if (!resourceId) {
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerClient()
     const { searchParams } = new URL(request.url)
     const resourceId = searchParams.get('resourceId')
 

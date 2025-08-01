@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { 
   ChatRoom, 
@@ -12,8 +12,8 @@ import {
 
 // 채팅방 목록 가져오기
 export async function getChatRooms(): Promise<ChatRoom[]> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data: rooms, error } = await supabase
     .from('chat_rooms')
@@ -52,8 +52,8 @@ export async function getChatRooms(): Promise<ChatRoom[]> {
 
 // 채팅방 생성
 export async function createChatRoom(payload: CreateRoomPayload): Promise<string> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data, error } = await supabase
     .rpc('create_chat_room', {
@@ -68,8 +68,8 @@ export async function createChatRoom(payload: CreateRoomPayload): Promise<string
 
 // 채팅방 참여
 export async function joinChatRoom(roomId: string): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -89,8 +89,8 @@ export async function joinChatRoom(roomId: string): Promise<void> {
 
 // 채팅방 나가기
 export async function leaveChatRoom(roomId: string): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -106,8 +106,8 @@ export async function leaveChatRoom(roomId: string): Promise<void> {
 
 // 메시지 전송
 export async function sendMessage(payload: SendMessagePayload): Promise<ChatMessage> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -139,8 +139,8 @@ export async function sendMessage(payload: SendMessagePayload): Promise<ChatMess
 
 // 메시지 수정
 export async function updateMessage(payload: UpdateMessagePayload): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { error } = await supabase
     .from('chat_messages')
@@ -155,8 +155,8 @@ export async function updateMessage(payload: UpdateMessagePayload): Promise<void
 
 // 메시지 삭제
 export async function deleteMessage(messageId: string): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { error } = await supabase
     .from('chat_messages')
@@ -172,8 +172,8 @@ export async function getRecentMessages(
   limit: number = 50,
   beforeId?: string
 ): Promise<ChatMessage[]> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   let query = supabase
     .from('chat_messages')
@@ -215,8 +215,8 @@ export async function updateOnlineStatus(
   status: 'online' | 'away' | 'busy' = 'online',
   roomId?: string
 ): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { error } = await supabase
     .rpc('update_online_status', {
@@ -229,8 +229,8 @@ export async function updateOnlineStatus(
 
 // 채팅방 멤버 가져오기
 export async function getChatRoomMembers(roomId: string) {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data, error } = await supabase
     .from('chat_room_members')
@@ -247,8 +247,8 @@ export async function getChatRoomMembers(roomId: string) {
 
 // 온라인 사용자 가져오기
 export async function getOnlineUsers(roomId?: string) {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   let query = supabase
     .from('online_users')
@@ -270,8 +270,8 @@ export async function getOnlineUsers(roomId?: string) {
 
 // 읽음 표시 업데이트
 export async function markAsRead(roomId: string): Promise<void> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  
+  const supabase = createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');

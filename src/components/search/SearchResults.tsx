@@ -7,7 +7,7 @@ import { ResourceCard } from '@/components/resources/ResourceCard';
 import { SearchBar } from './SearchBar';
 import { SearchFilters } from './SearchFilters';
 import { InfiniteScroll } from '@/components/performance/InfiniteScroll';
-import { useDebounce } from '@/lib/performance';
+import { useDebounce } from '@/lib/performance/index';
 import type { Resource } from '@/types/resource';
 
 interface SearchResult {

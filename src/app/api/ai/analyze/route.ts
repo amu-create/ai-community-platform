@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { contentAnalysisService } from '@/lib/ai/content-analysis';
-import { createClient } from '@/lib/supabase/server';
-import { handleApiError } from '@/lib/error/handlers';
-import { AppError } from '@/lib/error/errors';
+import { createServerClient } from '@/lib/supabase/server';
+import { handleApiError } from '@/lib/error-handler';
+import { AppError, UnauthorizedError, BadRequestError } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      throw new AppError('Unauthorized', 'UNAUTHORIZED');
+      throw new UnauthorizedError('Unauthorized');
     }
 
     const body = await req.json();
     const { contentId, forceReanalyze = false } = body;
 
     if (!contentId) {
-      throw new AppError('Content ID is required', 'BAD_REQUEST');
+      throw new BadRequestError('Content ID is required');
     }
 
     // 콘텐츠 가져오기
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error || !content) {
-      throw new AppError('Content not found', 'NOT_FOUND');
+      throw new NotFoundError('Content not found');
     }
 
     // 기존 분석 확인
@@ -71,13 +71,13 @@ export async function POST(req: NextRequest) {
 // 유사 콘텐츠 찾기
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createServerClient();
     const { searchParams } = new URL(req.url);
     const contentId = searchParams.get('contentId');
     const limit = parseInt(searchParams.get('limit') || '5');
 
     if (!contentId) {
-      throw new AppError('Content ID is required', 'BAD_REQUEST');
+      throw new BadRequestError('Content ID is required');
     }
 
     // 유사 콘텐츠 찾기

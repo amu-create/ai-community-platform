@@ -12,12 +12,12 @@ import {
   checkRateLimit,
   sanitizeResponse 
 } from '@/lib/validation/middleware';
-import { asyncHandler } from '@/lib/error/handlers';
+import { asyncHandler } from '@/lib/error-handler';
 import { 
   AuthenticationError, 
   DuplicateError, 
   DatabaseError 
-} from '@/lib/error/errors';
+} from '@/lib/errors';
 import { logger, PerformanceLogger } from '@/lib/error/logger';
 
 // GET: 리소스 목록 조회

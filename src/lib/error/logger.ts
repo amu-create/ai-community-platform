@@ -132,89 +132,6 @@ class ConsoleLogger implements ILogger {
   }
 }
 
-// 파일 로거 (서버 사이드 전용)
-class FileLogger implements ILogger {
-  private consoleLogger: ConsoleLogger;
-  
-  constructor() {
-    this.consoleLogger = new ConsoleLogger();
-  }
-  
-  private async writeToFile(entry: LogEntry) {
-    if (typeof window !== 'undefined') return; // 클라이언트에서는 실행 안 함
-    
-    try {
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      const logDir = path.join(process.cwd(), 'logs');
-      const logFile = path.join(logDir, `${entry.timestamp.split('T')[0]}.log`);
-      
-      // 로그 디렉토리 생성
-      await fs.mkdir(logDir, { recursive: true });
-      
-      // 로그 파일에 추가
-      await fs.appendFile(logFile, LogFormatter.json(entry) + '\n', 'utf-8');
-    } catch (error) {
-      console.error('Failed to write log to file:', error);
-    }
-  }
-  
-  async error(message: string, error?: Error, context?: LogContext) {
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: LogLevel.ERROR,
-      message,
-      context,
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: (error as any).code,
-      } : undefined,
-    };
-    
-    this.consoleLogger.error(message, error, context);
-    await this.writeToFile(entry);
-  }
-  
-  async warn(message: string, context?: LogContext) {
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: LogLevel.WARN,
-      message,
-      context,
-    };
-    
-    this.consoleLogger.warn(message, context);
-    await this.writeToFile(entry);
-  }
-  
-  async info(message: string, context?: LogContext) {
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: LogLevel.INFO,
-      message,
-      context,
-    };
-    
-    this.consoleLogger.info(message, context);
-    await this.writeToFile(entry);
-  }
-  
-  async debug(message: string, context?: LogContext) {
-    const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
-      level: LogLevel.DEBUG,
-      message,
-      context,
-    };
-    
-    this.consoleLogger.debug(message, context);
-    await this.writeToFile(entry);
-  }
-}
-
 // 로거 팩토리
 class LoggerFactory {
   private static instance: ILogger;
@@ -222,13 +139,7 @@ class LoggerFactory {
   static getLogger(): ILogger {
     if (!this.instance) {
       const logLevel = env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
-      
-      // 서버 사이드에서는 파일 로거 사용
-      if (typeof window === 'undefined' && env.NODE_ENV === 'production') {
-        this.instance = new FileLogger();
-      } else {
-        this.instance = new ConsoleLogger(logLevel);
-      }
+      this.instance = new ConsoleLogger(logLevel);
     }
     
     return this.instance;

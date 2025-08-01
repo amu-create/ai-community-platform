@@ -5,18 +5,19 @@ import { ProfileHeader } from './ProfileHeader'
 import { ProfileTabs } from './ProfileTabs'
 
 interface ProfilePageProps {
-  params: {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: ProfilePageProps) {
+  const resolvedParams = await params;
   const supabase = createServerComponentClient({ cookies })
   
   const { data: profile } = await supabase
     .from('profiles')
     .select('username, bio')
-    .eq('username', params.username)
+    .eq('username', resolvedParams.username)
     .single()
 
   if (!profile) {
@@ -32,6 +33,8 @@ export async function generateMetadata({ params }: ProfilePageProps) {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
+  const resolvedParams = await params;
+  const { username } = resolvedParams
   const supabase = createServerComponentClient({ cookies })
   
   // 프로필 정보 가져오기
@@ -48,7 +51,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       following_count,
       created_at
     `)
-    .eq('username', params.username)
+    .eq('username', resolvedParams.username)
     .single()
 
   if (error || !profile) {

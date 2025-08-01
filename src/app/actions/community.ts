@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { 
   Post, 
@@ -19,7 +19,7 @@ export async function getPosts(params?: {
   limit?: number;
   offset?: number;
 }) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   let query = supabase
     .from('posts')
@@ -91,7 +91,7 @@ export async function getPosts(params?: {
 }
 
 export async function getPost(id: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   const { data, error } = await supabase
     .from('posts')
@@ -129,17 +129,21 @@ export async function getPost(id: string) {
   }
   
   // Increment view count
-  await supabase.rpc('increment', {
-    table_name: 'posts',
-    column_name: 'view_count',
-    row_id: id
-  }).catch(() => {}); // Ignore errors
+  try {
+    await supabase.rpc('increment', {
+      table_name: 'posts',
+      column_name: 'view_count',
+      row_id: id
+    });
+  } catch (error) {
+    // Ignore errors
+  }
   
   return data as Post;
 }
 
 export async function createPost(input: CreatePostInput) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -161,7 +165,7 @@ export async function createPost(input: CreatePostInput) {
 }
 
 export async function updatePost(id: string, input: UpdatePostInput) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -187,7 +191,7 @@ export async function updatePost(id: string, input: UpdatePostInput) {
 }
 
 export async function deletePost(id: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -204,7 +208,7 @@ export async function deletePost(id: string) {
 }
 
 export async function votePost(postId: string, vote: -1 | 0 | 1) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -237,7 +241,7 @@ export async function votePost(postId: string, vote: -1 | 0 | 1) {
 
 // Comments
 export async function getComments(postId: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   const { data, error } = await supabase
     .from('comments')
@@ -298,7 +302,7 @@ export async function getComments(postId: string) {
 }
 
 export async function createComment(input: CreateCommentInput) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -341,7 +345,7 @@ export async function createComment(input: CreateCommentInput) {
 }
 
 export async function voteComment(commentId: string, vote: -1 | 0 | 1) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -371,7 +375,7 @@ export async function voteComment(commentId: string, vote: -1 | 0 | 1) {
 
 // RPC function for incrementing counters
 export async function createIncrementFunction() {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   const { error } = await supabase.rpc('create_increment_function', {
     function_sql: `

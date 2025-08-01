@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userProfileAnalysisService } from '@/lib/ai/user-profile-analysis';
-import { createClient } from '@/lib/supabase/server';
-import { handleApiError } from '@/lib/error/handlers';
-import { AppError } from '@/lib/error/errors';
+import { createServerClient } from '@/lib/supabase/server';
+import { handleApiError } from '@/lib/error-handler';
+import { AppError, UnauthorizedError, BadRequestError } from '@/lib/errors';
 
 // 사용자 활동 추적
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      throw new AppError('Unauthorized', 'UNAUTHORIZED');
+      throw new UnauthorizedError('Unauthorized');
     }
 
     const body = await req.json();
@@ -29,15 +29,15 @@ export async function POST(req: NextRequest) {
     const validContentTypes = ['post', 'resource', 'event', 'project'];
 
     if (!validTypes.includes(type)) {
-      throw new AppError('Invalid activity type', 'BAD_REQUEST');
+      throw new BadRequestError('Invalid activity type');
     }
 
     if (!validContentTypes.includes(contentType)) {
-      throw new AppError('Invalid content type', 'BAD_REQUEST');
+      throw new BadRequestError('Invalid content type');
     }
 
     if (!contentId) {
-      throw new AppError('Content ID is required', 'BAD_REQUEST');
+      throw new BadRequestError('Content ID is required');
     }
 
     // 활동 기록
@@ -65,12 +65,12 @@ export async function POST(req: NextRequest) {
 // 사용자 관심사 분석
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      throw new AppError('Unauthorized', 'UNAUTHORIZED');
+      throw new UnauthorizedError('Unauthorized');
     }
 
     const { searchParams } = new URL(req.url);

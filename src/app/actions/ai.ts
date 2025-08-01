@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 import { 
@@ -19,8 +19,7 @@ const openai = new OpenAI({
 
 // 인증 확인
 async function checkAuth() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = createServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');

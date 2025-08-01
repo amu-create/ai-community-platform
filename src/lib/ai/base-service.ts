@@ -1,6 +1,6 @@
 import { openai, AI_MODELS, RETRY_CONFIG } from './config';
 import { logger } from '@/lib/error/logger';
-import { AppError } from '@/lib/error/errors';
+import { AppError } from '@/lib/errors';
 
 export abstract class BaseAIService {
   protected serviceName: string;

@@ -1,13 +1,13 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const supabase = createClient();
-    const { userId } = params;
+    const supabase = createServerClient();
+    const { userId } = await params;
 
     // 사용자 포인트 정보 가져오기
     const { data: profile, error: profileError } = await supabase

@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type {
   LearningPath,
@@ -22,7 +22,7 @@ export async function getLearningPaths(params?: {
   limit?: number;
   offset?: number;
 }) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   let query = supabase
     .from('learning_paths')
@@ -75,7 +75,7 @@ export async function getLearningPaths(params?: {
   // Get user enrollments if authenticated
   const { data: { user } } = await supabase.auth.getUser();
   if (user && data) {
-    const pathIds = data.map(path => path.id);
+    const pathIds = data.map((path: any) => path.id);
     const { data: enrollments } = await supabase
       .from('user_enrollments')
       .select('*')
@@ -83,8 +83,8 @@ export async function getLearningPaths(params?: {
       .in('learning_path_id', pathIds);
     
     if (enrollments) {
-      const enrollmentMap = new Map(enrollments.map(e => [e.learning_path_id, e]));
-      data.forEach(path => {
+      const enrollmentMap = new Map(enrollments.map((e: any) => [e.learning_path_id, e]));
+      data.forEach((path: any) => {
         path.user_enrollment = enrollmentMap.get(path.id);
       });
     }
@@ -94,7 +94,7 @@ export async function getLearningPaths(params?: {
 }
 
 export async function getLearningPath(idOrSlug: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   
   // Try to get by ID first, then by slug
   let { data, error } = await supabase
@@ -167,7 +167,7 @@ export async function getLearningPath(idOrSlug: string) {
   
   // Sort steps by position
   if (data?.steps) {
-    data.steps.sort((a, b) => a.position - b.position);
+    data.steps.sort((a: any, b: any) => a.position - b.position);
   }
   
   // Get user enrollment and progress if authenticated
@@ -184,7 +184,7 @@ export async function getLearningPath(idOrSlug: string) {
       data.user_enrollment = enrollment;
       
       // Get progress for each step
-      const stepIds = data.steps.map(step => step.id);
+      const stepIds = data.steps.map((step: any) => step.id);
       const { data: progress } = await supabase
         .from('user_progress')
         .select('*')
@@ -192,8 +192,8 @@ export async function getLearningPath(idOrSlug: string) {
         .in('step_id', stepIds);
       
       if (progress) {
-        const progressMap = new Map(progress.map(p => [p.step_id, p]));
-        data.steps.forEach(step => {
+        const progressMap = new Map(progress.map((p: any) => [p.step_id, p]));
+        data.steps.forEach((step: any) => {
           step.user_progress = progressMap.get(step.id);
         });
       }
@@ -204,7 +204,7 @@ export async function getLearningPath(idOrSlug: string) {
 }
 
 export async function createLearningPath(input: CreateLearningPathInput) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -226,7 +226,7 @@ export async function createLearningPath(input: CreateLearningPathInput) {
 }
 
 export async function updateLearningPath(id: string, input: Partial<CreateLearningPathInput>) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -256,7 +256,7 @@ export async function addLearningPathStep(
   learningPathId: string, 
   input: CreateLearningPathStepInput
 ) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -291,7 +291,7 @@ export async function updateLearningPathStep(
   stepId: string,
   input: Partial<CreateLearningPathStepInput>
 ) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -310,7 +310,7 @@ export async function updateLearningPathStep(
 }
 
 export async function deleteLearningPathStep(stepId: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -327,7 +327,7 @@ export async function deleteLearningPathStep(stepId: string) {
 
 // User Enrollments
 export async function enrollInLearningPath(learningPathId: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -358,7 +358,7 @@ export async function updateEnrollmentStatus(
   enrollmentId: string,
   status: 'active' | 'completed' | 'paused' | 'dropped'
 ) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -388,7 +388,7 @@ export async function updateStepProgress(
   enrollmentId: string,
   input: UpdateProgressInput
 ) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) throw new Error('Not authenticated');
@@ -417,7 +417,7 @@ export async function updateStepProgress(
 }
 
 export async function getUserEnrollments(userId?: string) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   const targetUserId = userId || user?.id;

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ArrowRight, Brain, Code, Users, Zap, BookOpen, Trophy } from 'lucide-react'
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  const supabase = await createClient()
+  const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (user) {

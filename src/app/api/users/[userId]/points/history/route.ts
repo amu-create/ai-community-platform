@@ -1,13 +1,13 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const supabase = createClient();
-    const { userId } = params;
+    const supabase = createServerClient();
+    const { userId } = await params;
     
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
