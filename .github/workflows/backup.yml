@@ -1,0 +1,40 @@
+name: Database Backup
+
+on:
+  schedule:
+    # 매일 새벽 2시 (KST 기준)
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: Backup Supabase Database
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+          
+      - name: Backup database
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          timestamp=$(date +%Y%m%d_%H%M%S)
+          supabase db dump --project-ref $SUPABASE_PROJECT_ID > backup_${timestamp}.sql
+          
+      - name: Upload backup to artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: database-backup-${{ github.run_id }}
+          path: backup_*.sql
+          retention-days: 30
+          
+      - name: Notify backup completion
+        if: success()
+        run: echo "Database backup completed successfully"

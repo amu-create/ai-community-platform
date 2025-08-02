@@ -69,3 +69,6 @@ dev-debug.log
 tasks.json
 tasks/ 
 .vercel
+"# Private docs with sensitive info"  
+"deployment-*.txt"  
+"*-api-*.txt" 

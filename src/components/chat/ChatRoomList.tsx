@@ -1,16 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Plus, Search, MessageSquare, Lock, Globe } from 'lucide-react';
-import { ChatRoom } from '@/types/chat';
-import { getChatRooms, joinChatRoom } from '@/app/actions/chat';
-import { useToast } from '@/components/ui/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Users, MessageSquare, Plus, Hash } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import {
   Dialog,
   DialogContent,
@@ -19,242 +18,253 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { createChatRoom } from '@/app/actions/chat';
+import { useAuthStore } from '@/store/auth';
+import { toast } from 'sonner';
 
-interface ChatRoomListProps {
-  onRoomSelect: (room: ChatRoom) => void;
-  selectedRoomId?: string;
+interface ChatRoom {
+  id: string;
+  name: string;
+  description: string | null;
+  is_public: boolean;
+  created_at: string;
+  member_count?: number;
+  last_message?: {
+    content: string;
+    created_at: string;
+  };
 }
 
-export function ChatRoomList({ onRoomSelect, selectedRoomId }: ChatRoomListProps) {
+export function ChatRoomList() {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [newRoomDescription, setNewRoomDescription] = useState('');
-  const [newRoomType, setNewRoomType] = useState<'public' | 'private'>('public');
-  const { toast } = useToast();
-
-  // 채팅방 목록 로드
-  const loadRooms = async () => {
-    try {
-      const data = await getChatRooms();
-      setRooms(data);
-    } catch (error) {
-      console.error('Failed to load chat rooms:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat rooms",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newRoom, setNewRoom] = useState({ name: '', description: '' });
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const supabase = createClient();
 
   useEffect(() => {
-    loadRooms();
+    fetchRooms();
+    
+    // 실시간 구독
+    const channel = supabase
+      .channel('chat_rooms')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'chat_rooms' 
+      }, () => {
+        fetchRooms();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  // 채팅방 생성
-  const handleCreateRoom = async () => {
-    if (!newRoomName.trim()) return;
-
-    setIsLoading(true);
+  const fetchRooms = async () => {
     try {
-      await createChatRoom({
-        name: newRoomName.trim(),
-        description: newRoomDescription.trim() || undefined,
-        type: newRoomType
-      });
-      
-      toast({
-        title: "Success",
-        description: "Chat room created successfully"
-      });
-      
-      setIsCreateDialogOpen(false);
-      setNewRoomName('');
-      setNewRoomDescription('');
-      setNewRoomType('public');
-      
-      // 목록 새로고침
-      await loadRooms();
+      const { data, error } = await supabase
+        .from('chat_rooms')
+        .select(`
+          *,
+          chat_room_members(count),
+          chat_messages(content, created_at)
+        `)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedRooms = data?.map(room => ({
+        ...room,
+        member_count: room.chat_room_members?.[0]?.count || 0,
+        last_message: room.chat_messages?.[0] || null,
+      })) || [];
+
+      setRooms(formattedRooms);
     } catch (error) {
-      console.error('Failed to create room:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create chat room",
-        variant: "destructive"
-      });
+      console.error('Failed to fetch chat rooms:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // 필터링된 채팅방
-  const filteredRooms = rooms.filter(room =>
-    room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    room.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const createRoom = async () => {
+    if (!user) {
+      toast.error('로그인이 필요합니다');
+      return;
+    }
+
+    if (!newRoom.name.trim()) {
+      toast.error('채팅방 이름을 입력해주세요');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('chat_rooms')
+        .insert({
+          name: newRoom.name,
+          description: newRoom.description || null,
+          is_public: true,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 생성자를 멤버로 추가
+      await supabase
+        .from('chat_room_members')
+        .insert({
+          room_id: data.id,
+          user_id: user.id,
+        });
+
+      toast.success('채팅방이 생성되었습니다');
+      setIsCreateOpen(false);
+      setNewRoom({ name: '', description: '' });
+      router.push(`/chat/${data.id}`);
+    } catch (error) {
+      console.error('Failed to create room:', error);
+      toast.error('채팅방 생성에 실패했습니다');
+    }
+  };
+
+  const joinRoom = async (roomId: string) => {
+    if (!user) {
+      toast.error('로그인이 필요합니다');
+      return;
+    }
+
+    try {
+      await supabase
+        .from('chat_room_members')
+        .upsert({
+          room_id: roomId,
+          user_id: user.id,
+        });
+
+      router.push(`/chat/${roomId}`);
+    } catch (error) {
+      console.error('Failed to join room:', error);
+    }
+  };
+
+  if (loading) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
-    <Card className="h-full flex flex-col">
-      <div className="p-4 border-b space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Chat Rooms</h2>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Room
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <Badge variant="secondary" className="gap-1">
+          <Hash className="h-3 w-3" />
+          {rooms.length} 개의 채팅방
+        </Badge>
+        
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline">
+              <Plus className="h-4 w-4 mr-1" />
+              새 채팅방
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>새 채팅방 만들기</DialogTitle>
+              <DialogDescription>
+                커뮤니티 멤버들과 대화할 수 있는 공개 채팅방을 만들어보세요
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">채팅방 이름</Label>
+                <Input
+                  id="name"
+                  value={newRoom.name}
+                  onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+                  placeholder="예: React 학습방"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">설명 (선택)</Label>
+                <Textarea
+                  id="description"
+                  value={newRoom.description}
+                  onChange={(e) => setNewRoom({ ...newRoom, description: e.target.value })}
+                  placeholder="채팅방에 대한 간단한 설명을 입력하세요"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                취소
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Chat Room</DialogTitle>
-                <DialogDescription>
-                  Create a new chat room for your community.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="room-name">Room Name</Label>
-                  <Input
-                    id="room-name"
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                    placeholder="e.g., AI Discussion"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="room-description">Description (Optional)</Label>
-                  <Textarea
-                    id="room-description"
-                    value={newRoomDescription}
-                    onChange={(e) => setNewRoomDescription(e.target.value)}
-                    placeholder="What's this room about?"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label>Room Type</Label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="room-type"
-                        value="public"
-                        checked={newRoomType === 'public'}
-                        onChange={(e) => setNewRoomType(e.target.value as 'public')}
-                        className="h-4 w-4"
-                      />
-                      <Globe className="h-4 w-4" />
-                      <span>Public</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="room-type"
-                        value="private"
-                        checked={newRoomType === 'private'}
-                        onChange={(e) => setNewRoomType(e.target.value as 'private')}
-                        className="h-4 w-4"
-                      />
-                      <Lock className="h-4 w-4" />
-                      <span>Private</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  onClick={handleCreateRoom}
-                  disabled={isLoading || !newRoomName.trim()}
-                >
-                  Create Room
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search rooms..."
-            className="pl-10"
-          />
-        </div>
+              <Button onClick={createRoom}>생성</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="p-4 text-center text-muted-foreground">
-            Loading rooms...
-          </div>
-        ) : filteredRooms.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            No rooms found
-          </div>
-        ) : (
-          <div className="divide-y">
-            {filteredRooms.map((room) => (
-              <div
-                key={room.id}
-                className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${
-                  selectedRoomId === room.id ? 'bg-muted' : ''
-                }`}
-                onClick={() => onRoomSelect(room)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium truncate">{room.name}</h3>
-                      {room.type === 'private' && (
-                        <Lock className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </div>
-                    {room.description && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        {room.description}
-                      </p>
-                    )}
-                    {room.last_message && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <MessageSquare className="h-3 w-3 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground truncate">
-                          <span className="font-medium">
-                            {room.last_message.user?.username}:
-                          </span>{' '}
-                          {room.last_message.content}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge variant="secondary" className="text-xs">
-                      <Users className="h-3 w-3 mr-1" />
-                      {room.member_count || 0}
-                    </Badge>
-                    {room.unread_count && room.unread_count > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        {room.unread_count}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+      <ScrollArea className="h-[500px]">
+        <div className="space-y-2">
+          {rooms.map((room) => (
+            <Card
+              key={room.id}
+              className="p-4 cursor-pointer hover:bg-accent transition-colors"
+              onClick={() => joinRoom(room.id)}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="font-semibold">{room.name}</h3>
+                <Badge variant="outline" className="text-xs">
+                  <Users className="h-3 w-3 mr-1" />
+                  {room.member_count}
+                </Badge>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </Card>
+              
+              {room.description && (
+                <p className="text-sm text-muted-foreground mb-2">
+                  {room.description}
+                </p>
+              )}
+              
+              {room.last_message ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <MessageSquare className="h-3 w-3" />
+                  <span className="truncate flex-1">{room.last_message.content}</span>
+                  <span className="whitespace-nowrap">
+                    {formatDistanceToNow(new Date(room.last_message.created_at), {
+                      addSuffix: true,
+                      locale: ko,
+                    })}
+                  </span>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  아직 메시지가 없습니다
+                </div>
+              )}
+            </Card>
+          ))}
+          
+          {rooms.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>아직 채팅방이 없습니다</p>
+              <p className="text-sm">첫 번째 채팅방을 만들어보세요!</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

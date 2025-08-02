@@ -41,6 +41,7 @@ const navigation = [
   { name: '커뮤니티', href: '/community', icon: Users },
   { name: '채팅', href: '/chat', icon: MessageSquare },
   { name: '레벨', href: '/levels', icon: Trophy },
+  { name: '주간 베스트', href: '/weekly-best', icon: Trophy },
 ];
 
 export function DashboardNav() {

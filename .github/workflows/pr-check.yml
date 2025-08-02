@@ -1,0 +1,145 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # PR 정보 댓글
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: PR Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## 🤖 AI Community Platform - PR Check')
+            );
+            
+            const body = `## 🤖 AI Community Platform - PR Check
+            
+            ### 📊 PR Information
+            - **Branch**: \`${{ github.head_ref }}\` → \`${{ github.base_ref }}\`
+            - **Commit**: \`${{ github.event.pull_request.head.sha }}\`
+            - **Author**: @${{ github.event.pull_request.user.login }}
+            
+            ### 🔍 Automated Checks
+            | Check | Status |
+            |-------|--------|
+            | Code Quality | ⏳ Running |
+            | Tests | ⏳ Running |
+            | Build | ⏳ Running |
+            | Security | ⏳ Running |
+            
+            ### 📱 Preview
+            Vercel will automatically create a preview deployment for this PR.
+            
+            ---
+            *This comment will be updated as checks complete.*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # 파일 변경 사항 분석
+  analyze-changes:
+    name: Analyze Changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_db_changes: ${{ steps.check.outputs.has_db_changes }}
+      has_env_changes: ${{ steps.check.outputs.has_env_changes }}
+      has_api_changes: ${{ steps.check.outputs.has_api_changes }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for specific changes
+        id: check
+        run: |
+          # 데이터베이스 변경 확인
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "(supabase/migrations|\.sql)" > /dev/null; then
+            echo "has_db_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_db_changes=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # 환경 변수 변경 확인
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "(\.env\.example|env\.ts)" > /dev/null; then
+            echo "has_env_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_env_changes=false" >> $GITHUB_OUTPUT
+          fi
+          
+          # API 변경 확인
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "app/api" > /dev/null; then
+            echo "has_api_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_api_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+  # 위험 패턴 검사
+  danger-check:
+    name: Danger Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for dangerous patterns
+        run: |
+          # console.log 확인
+          if grep -r "console\.log" src/ --include="*.ts" --include="*.tsx" | grep -v "// eslint-disable-line" > /dev/null; then
+            echo "::warning::Found console.log statements. Please remove them before merging."
+          fi
+          
+          # 하드코딩된 비밀 확인
+          if grep -r -E "(api_key|secret|password|token)\s*=\s*['\"][^'\"]+['\"]" src/ --include="*.ts" --include="*.tsx" > /dev/null; then
+            echo "::error::Found potential hardcoded secrets. Please use environment variables."
+            exit 1
+          fi
+          
+          # TODO 코멘트 확인
+          todo_count=$(grep -r "TODO\|FIXME\|@todo" src/ --include="*.ts" --include="*.tsx" | wc -l)
+          if [ $todo_count -gt 0 ]; then
+            echo "::warning::Found $todo_count TODO/FIXME comments."
+          fi
+
+  # 의존성 검토
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0

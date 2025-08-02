@@ -1,0 +1,136 @@
+name: Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # AI 코드 리뷰
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+            **/*.js
+            **/*.jsx
+
+      - name: AI Code Review
+        uses: actions/github-script@v6
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          script: |
+            const changedFiles = '${{ steps.changed-files.outputs.all_changed_files }}'.split(' ');
+            
+            // 코드 리뷰 체크리스트
+            const reviewChecklist = {
+              security: [
+                'SQL injection 방지',
+                'XSS 취약점 확인',
+                'API 키 노출 확인',
+                '인증/인가 처리',
+                'Input validation'
+              ],
+              performance: [
+                '불필요한 re-render 방지',
+                '메모이제이션 사용',
+                '번들 크기 최적화',
+                '이미지 최적화',
+                'API 호출 최적화'
+              ],
+              quality: [
+                'TypeScript 타입 안전성',
+                '에러 핸들링',
+                '코드 중복 제거',
+                '네이밍 컨벤션',
+                '주석 및 문서화'
+              ],
+              testing: [
+                '테스트 커버리지',
+                'Edge case 처리',
+                '에러 시나리오 테스트'
+              ]
+            };
+            
+            let comment = '## 🤖 AI Code Review\n\n';
+            comment += '### 📋 Review Checklist\n\n';
+            
+            Object.entries(reviewChecklist).forEach(([category, items]) => {
+              comment += `#### ${category.charAt(0).toUpperCase() + category.slice(1)}\n`;
+              items.forEach(item => {
+                comment += `- [ ] ${item}\n`;
+              });
+              comment += '\n';
+            });
+            
+            comment += '### 📝 Changed Files\n';
+            changedFiles.forEach(file => {
+              comment += `- \`${file}\`\n`;
+            });
+            
+            comment += '\n### 💡 Recommendations\n';
+            comment += '- Review the checklist above for all changed files\n';
+            comment += '- Ensure all tests pass before merging\n';
+            comment += '- Consider performance implications of changes\n';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # 의존성 검사
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+
+  # 브랜치 보호 규칙 확인
+  branch-protection:
+    name: Branch Protection Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR base branch
+        if: github.base_ref == 'main'
+        run: |
+          echo "::notice::This PR targets the main branch. Ensure all checks pass!"
+          
+      - name: Check commit messages
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const commits = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            
+            const conventionalCommitPattern = /^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\(.+\))?: .+/;
+            const invalidCommits = commits.data.filter(commit => 
+              !conventionalCommitPattern.test(commit.commit.message.split('\n')[0])
+            );
+            
+            if (invalidCommits.length > 0) {
+              core.setFailed(`Found ${invalidCommits.length} commits not following conventional commit format`);
+              invalidCommits.forEach(commit => {
+                console.log(`Invalid: ${commit.commit.message.split('\n')[0]}`);
+              });
+            }
