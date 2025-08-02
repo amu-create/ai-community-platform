@@ -57,13 +57,13 @@ export const env = (() => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ 환경 변수 검증 실패:');
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
       });
       
       // 개발 환경에서만 상세 에러 표시
       if (process.env.NODE_ENV === 'development') {
-        throw new Error(`환경 변수 검증 실패:\n${JSON.stringify(error.errors, null, 2)}`);
+        throw new Error(`환경 변수 검증 실패:\n${JSON.stringify(error.issues, null, 2)}`);
       } else {
         throw new Error('환경 변수 설정을 확인해주세요');
       }

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { logger } from '@/lib/error/logger';
-import { AppError } from '@/lib/errors';
+import { AppError } from '@/lib/error/errors';
 
 // 전역 에러 핸들러 설정
 export function useGlobalErrorHandler() {
@@ -88,8 +88,7 @@ export async function handleApiResponse<T>(response: Response): Promise<T> {
           errorData.error.message || '서버 오류가 발생했습니다',
           errorData.error.statusCode || response.status,
           true,
-          errorData.error.code,
-          errorData.error.details
+          errorData.error.code
         );
       }
     }

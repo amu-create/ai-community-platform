@@ -14,7 +14,7 @@ interface ApiResponse<T = any> {
 export function validationErrorResponse(error: ZodError): NextResponse<ApiResponse> {
   const errors: Record<string, string[]> = {};
   
-  error.errors.forEach((err) => {
+  (error as any).errors.forEach((err: any) => {
     const field = err.path.join('.');
     if (!errors[field]) {
       errors[field] = [];
@@ -262,14 +262,14 @@ export function sanitizeResponse<T extends Record<string, any>>(
     
     if (typeof value === 'string') {
       if (htmlFields.includes(key)) {
-        sanitized[key] = sanitize.html(value);
+        (sanitized as any)[key] = sanitize.html(value);
       } else if (strictFields.includes(key)) {
-        sanitized[key] = sanitize.strict(value);
+        (sanitized as any)[key] = sanitize.strict(value);
       } else {
-        sanitized[key] = sanitize.text(value);
+        (sanitized as any)[key] = sanitize.text(value);
       }
     } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = sanitizeResponse(value, options);
+      (sanitized as any)[key] = sanitizeResponse(value, options);
     }
   }
   

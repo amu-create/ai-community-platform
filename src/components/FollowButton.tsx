@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { useFollow } from '@/hooks/useFollow'
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthStore } from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 
 interface FollowButtonProps {
@@ -26,7 +26,7 @@ export function FollowButton({
   showIcon = true,
   onFollowChange,
 }: FollowButtonProps) {
-  const { user } = useAuth()
+  const user = useAuthStore((state) => state.user)
   const router = useRouter()
   const { isFollowing, isLoading, toggleFollow } = useFollow({
     userId,

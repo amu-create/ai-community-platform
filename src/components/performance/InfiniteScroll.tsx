@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useIntersectionObserver } from '@/lib/performance';
 import { LoadingSpinner } from '@/lib/performance';
 
@@ -37,7 +37,7 @@ export function InfiniteScroll({
   initialScrollTo = 0,
   preserveScrollPosition = true,
 }: InfiniteScrollProps) {
-  const loadMoreRef = useRef<() => void>();
+  const loadMoreRef = useRef<(() => void) | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
   const isFirstRender = useRef(true);
   

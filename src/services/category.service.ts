@@ -109,7 +109,7 @@ export class CategoryService {
       .eq('resource_id', resourceId);
 
     if (error) throw error;
-    return data?.map(item => item.categories).filter(Boolean) || [];
+    return data?.map((item: any) => item.categories).filter(Boolean) as Category[] || [];
   }
 
   // Add category to resource
@@ -246,7 +246,7 @@ export class TagService {
       .eq('resource_id', resourceId);
 
     if (error) throw error;
-    return data?.map(item => item.tags).filter(Boolean) || [];
+    return data?.map((item: any) => item.tags).filter(Boolean) as Tag[] || [];
   }
 
   // Add tag to resource

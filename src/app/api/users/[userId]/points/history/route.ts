@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { userId } = await params;
     
     const { searchParams } = new URL(request.url);

@@ -82,9 +82,8 @@ export class ContentAnalysisService extends BaseAIService {
 
       return result;
     } catch (error) {
-      logger.error('Content analysis failed', {
+      logger.error('Content analysis failed', error instanceof Error ? error : new Error('Unknown error'), {
         contentId: metadata.contentId,
-        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
     }
@@ -128,7 +127,7 @@ export class ContentAnalysisService extends BaseAIService {
       });
 
     if (error) {
-      logger.error('Failed to save content analysis', { contentId, error });
+      logger.error('Failed to save content analysis', new Error('See metadata'), { contentId, error });
       throw error;
     }
   }
@@ -147,10 +146,8 @@ export class ContentAnalysisService extends BaseAIService {
         this.analyzeContent(content)
           .then(analysis => results.set(content.contentId, analysis))
           .catch(error => {
-            logger.error('Batch analysis failed for content', {
-              contentId: content.contentId,
-              error,
-            });
+            logger.error('Batch analysis failed for content', new Error('See metadata'), { contentId: content.contentId,
+              error, });
           })
       );
       
@@ -199,7 +196,7 @@ export class ContentAnalysisService extends BaseAIService {
       .single();
 
     if (error || !currentAnalysis?.embedding) {
-      logger.error('Failed to get content embedding', { contentId, error });
+      logger.error('Failed to get content embedding', new Error('See metadata'), { contentId, error });
       return [];
     }
 
@@ -210,7 +207,7 @@ export class ContentAnalysisService extends BaseAIService {
       .neq('content_id', contentId);
 
     if (allError || !allAnalysis) {
-      logger.error('Failed to get all embeddings', { error: allError });
+      logger.error('Failed to get all embeddings', allError instanceof Error ? allError : new Error(allError));
       return [];
     }
 

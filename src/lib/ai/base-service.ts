@@ -38,14 +38,12 @@ export abstract class BaseAIService {
       }
     }
     
-    logger.error(`${this.serviceName}: ${operationName} failed after all retries`, {
-      error: lastError?.message,
-    });
+    logger.error(`${this.serviceName}: ${operationName} failed after all retries`, lastError || new Error('Unknown error'));
     
     throw new AppError(
       `AI service failed: ${operationName}`,
-      'AI_SERVICE_ERROR',
-      { service: this.serviceName, operation: operationName }
+      500,
+      'AI_SERVICE_ERROR'
     );
   }
 
@@ -93,8 +91,8 @@ export abstract class BaseAIService {
       const result = response.results[0];
       return {
         flagged: result.flagged,
-        categories: result.categories,
-        scores: result.category_scores,
+        categories: result.categories as unknown as Record<string, boolean>,
+        scores: result.category_scores as unknown as Record<string, number>,
       };
     }, 'moderateContent');
   }

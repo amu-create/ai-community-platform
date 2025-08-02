@@ -28,11 +28,15 @@ interface UserPreferences {
 }
 
 export class AIRecommendationEngine {
-  private supabase = createServerClient();
+  private async getSupabase() {
+    return await createServerClient();
+  }
 
   async analyzeUserBehavior(userId: string): Promise<UserPreferences> {
+    const supabase = await this.getSupabase();
+    
     // 사용자 활동 데이터 수집
-    const { data: activities } = await this.supabase
+    const { data: activities } = await supabase
       .from('user_activities')
       .select('*')
       .eq('user_id', userId)
@@ -40,7 +44,7 @@ export class AIRecommendationEngine {
       .limit(100);
 
     // 사용자 북마크 데이터
-    const { data: bookmarks } = await this.supabase
+    const { data: bookmarks } = await supabase
       .from('resource_bookmarks')
       .select(`
         resource_id,
@@ -54,7 +58,7 @@ export class AIRecommendationEngine {
       .eq('user_id', userId);
 
     // 사용자가 작성한 콘텐츠
-    const { data: userContent } = await this.supabase
+    const { data: userContent } = await supabase
       .from('posts')
       .select('category_id, metadata')
       .eq('author_id', userId);
@@ -136,7 +140,8 @@ export class AIRecommendationEngine {
     }
 
     // 벡터 유사도 검색
-    const { data: similarContent } = await this.supabase.rpc(
+    const supabase = await this.getSupabase();
+    const { data: similarContent } = await supabase.rpc(
       'search_similar_content',
       {
         query_embedding: embedding,
@@ -270,4 +275,23 @@ export class AIRecommendationEngine {
       }));
     }
   }
+}
+
+// 싱글톤 인스턴스
+export const recommendationEngine = new AIRecommendationEngine();
+
+// Types
+export interface Recommendation {
+  id: string;
+  type: 'resource' | 'learning_path';
+  score: number;
+  reason?: string;
+  title: string;
+  description: string;
+}
+
+export interface RecommendationContext {
+  userId: string;
+  type: 'resource' | 'learning_path' | 'mixed';
+  limit?: number;
 }

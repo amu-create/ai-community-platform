@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     // Get current user if authenticated
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     const result = await searchService.searchResources({

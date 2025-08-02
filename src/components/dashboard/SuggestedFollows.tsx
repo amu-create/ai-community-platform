@@ -8,7 +8,7 @@ import { FollowButton } from '@/components/FollowButton'
 import { Users, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuthStore } from '@/store/authStore'
 
 interface SuggestedUser {
   id: string
@@ -21,7 +21,7 @@ interface SuggestedUser {
 export function SuggestedFollows() {
   const [users, setUsers] = useState<SuggestedUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
+  const user = useAuthStore((state) => state.user)
   const supabase = createClientComponentClient()
 
   useEffect(() => {

@@ -13,6 +13,7 @@ export interface Resource {
   author_id: string;
   view_count: number;
   vote_count: number;
+  bookmark_count?: number;
   status: ResourceStatus;
   metadata?: Record<string, any>;
   created_at: string;

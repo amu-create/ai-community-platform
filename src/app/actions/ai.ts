@@ -19,7 +19,7 @@ const openai = new OpenAI({
 
 // 인증 확인
 async function checkAuth() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');

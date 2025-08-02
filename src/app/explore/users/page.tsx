@@ -29,7 +29,7 @@ export default function ExplorUsersPage() {
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
-  const { user } = useAuthStore()
+  const user = useAuthStore((state) => state.user)
   const supabase = createClientComponentClient()
   const limit = 20
 

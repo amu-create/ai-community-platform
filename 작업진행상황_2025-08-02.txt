@@ -1,0 +1,96 @@
+AI Community Platform 작업 진행 상황
+작성일: 2025-08-02
+
+## 🔴 최근 진행 내역
+
+### Next.js 15 호환성 문제 해결 중
+1. ✅ createClient → createServerClient 변환 완료
+2. ✅ 동적 라우트 params Promise 타입 적용 완료
+3. ✅ 중복 변수 선언 제거 완료
+4. ✅ NotFoundError import 추가 완료
+5. ✅ bookmarks API profiles 배열 처리 완료
+6. ✅ leaderboard filter 타입 annotation 추가 완료
+7. 🔄 Vercel 배포 시도 중 (타입 에러로 인한 빌드 실패 반복)
+
+### 최근 커밋 내역
+- e5288d7: fix: Fix all type errors for Next.js 15 compatibility (2025-08-01 15:32:54)
+- 4ebe520: fix: Add type annotation for leaderboard filter
+- 38a189a: fix: Add type annotation for bookmarks mapping
+- 7b877ee: fix: Handle profiles array in bookmarks API
+- 104561b: fix: Resolve createServerClient naming conflict
+- 67d046a: fix: Add missing NotFoundError import
+- a0d45a6: fix: Remove duplicate variable declarations in profile pages
+- 92e3b16: fix: Next.js 15 compatibility - createClient imports and dynamic route params
+
+## 🟡 현재 해결 중인 문제
+
+### TypeScript 타입 에러
+1. `/src/app/api/resources/route.ts`
+   - ❌ cookies() Promise 처리 필요
+   - ❌ AuthenticationError, DuplicateError 메시지 파라미터 문제
+
+2. `/src/app/explore/users/page.tsx`
+   - ❌ AuthContext에서 user 속성 없음 (authStore 사용 필요)
+
+3. 기타 타입 에러들
+   - ❌ 암시적 any 타입 에러 다수
+   - ❌ Promise 처리 필요한 부분들
+
+### Vercel 배포 상태
+- 모든 최근 배포 시도 실패 (ERROR 상태)
+- 타입 체크 단계에서 빌드 실패
+- GitHub 자동 배포 트리거 안됨
+
+## 📊 전체 진행률
+- 전체 태스크: 25개
+- 완료: 22개 (88%)
+- 진행중: 1개
+- 대기: 2개
+
+## 🔵 완료된 주요 기능
+1. ✅ Next.js 14 프로젝트 세팅
+2. ✅ Tailwind CSS & Shadcn/UI 통합
+3. ✅ Supabase 인증 시스템
+4. ✅ 사용자 프로필 관리
+5. ✅ 리소스 관리 시스템
+6. ✅ 카테고리 & 태그 시스템
+7. ✅ 검색 & 필터 기능
+8. ✅ 북마크 시스템
+9. ✅ 학습 경로 시스템
+10. ✅ 커뮤니티 기능
+11. ✅ 사용자 레벨 시스템
+12. ✅ 팔로우/팔로워 시스템
+13. ✅ 큐레이션 시스템
+14. ✅ 다크/라이트 모드
+15. ✅ 성능 최적화 & Lazy Loading
+16. ✅ 무한 스크롤
+17. ✅ Zustand 상태 관리
+18. ✅ Row Level Security
+19. ✅ 입력 검증 & 살균
+20. ✅ 에러 핸들링 & 로깅
+21. ✅ 관리자 대시보드
+22. ✅ SEO 최적화
+
+## 🟢 다음 작업 계획
+1. 🔨 모든 TypeScript 타입 에러 해결
+   - cookies() await 처리
+   - AuthContext/authStore 통합
+   - 암시적 any 타입 제거
+
+2. 🚀 Vercel 성공적 배포
+   - 타입 체크 통과
+   - 빌드 성공 확인
+
+3. 🧪 CI/CD 파이프라인 구성 (Task #22)
+   - GitHub Actions 설정
+   - 자동 테스트 워크플로우
+
+## 📁 중요 파일 위치
+- 프로젝트 루트: C:/ai-community-platform
+- Vercel 프로젝트 ID: prj_rCDesTKJ8TWsFmCutdTqtLz6fYev
+- GitHub 저장소: https://github.com/amu-create/ai-community-platform
+
+## ⚠️ 주의사항
+- Next.js 15 마이그레이션으로 인한 호환성 문제 지속
+- TypeScript strict 모드로 인한 타입 체크 강화
+- Vercel 자동 배포 웹훅 점검 필요

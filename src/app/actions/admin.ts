@@ -6,7 +6,7 @@ import { AdminStats, UserActivity, TopContent, UserGrowth, AdminUser } from '@/t
 
 // 관리자 권한 확인
 async function checkAdminAuth() {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');

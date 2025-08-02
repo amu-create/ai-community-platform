@@ -14,7 +14,7 @@ interface BookmarkButtonProps {
   isBookmarked?: boolean
   bookmarkCount?: number
   showCount?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'default' | 'lg'
   variant?: 'default' | 'ghost' | 'outline'
   className?: string
   onBookmarkToggle?: (isBookmarked: boolean) => void
@@ -25,13 +25,13 @@ export function BookmarkButton({
   isBookmarked: initialBookmarked = false,
   bookmarkCount: initialCount = 0,
   showCount = true,
-  size = 'md',
+  size = 'default',
   variant = 'ghost',
   className,
   onBookmarkToggle
 }: BookmarkButtonProps) {
   const router = useRouter()
-  const { user } = useAuthStore()
+  const user = useAuthStore((state) => state.user)
   const { toggleBookmark } = useResourceStore()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
@@ -94,13 +94,13 @@ export function BookmarkButton({
 
   const sizeClasses = {
     sm: 'h-8 px-2 text-xs',
-    md: 'h-9 px-3 text-sm',
+    default: 'h-9 px-3 text-sm',
     lg: 'h-10 px-4'
   }
 
   const iconSizes = {
     sm: 'h-3.5 w-3.5',
-    md: 'h-4 w-4',
+    default: 'h-4 w-4',
     lg: 'h-5 w-5'
   }
 

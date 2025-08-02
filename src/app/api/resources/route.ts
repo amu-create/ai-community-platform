@@ -30,7 +30,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
   // 쿼리 파라미터 검증
   const queryValidation = validateQuery(searchParams, searchSchema.merge(paginationSchema));
   if (!queryValidation.success) {
-    return queryValidation.response;
+    return (queryValidation as any).response;
   }
   
   const { query, category, tags, sort = 'recent', page = 1, limit = 20 } = queryValidation.data;
@@ -159,13 +159,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
   });
   
   if (!rateLimitResult.success) {
-    return rateLimitResult.response;
+    return (rateLimitResult as any).response;
   }
   
   // 요청 본문 검증
   const bodyValidation = await validateBody(request, createResourceSchema);
   if (!bodyValidation.success) {
-    return bodyValidation.response;
+    return (bodyValidation as any).response;
   }
   
   const { title, description, url, category, tags = [] } = bodyValidation.data;

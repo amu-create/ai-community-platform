@@ -123,7 +123,7 @@ export const categoryService = {
       .eq('resource_id', resourceId);
 
     if (error) throw error;
-    return data?.map(item => item.category).filter(Boolean) || [];
+    return data?.map((item: any) => item.category).filter(Boolean) as Category[] || [];
   },
 
   async setResourceCategories(resourceId: string, categoryIds: string[]): Promise<void> {

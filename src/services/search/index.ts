@@ -54,22 +54,28 @@ export const searchService = {
 
     // Category filter (requires join)
     if (filters.categoryIds && filters.categoryIds.length > 0) {
-      query = query.in('id', 
-        supabase
-          .from('resource_categories')
-          .select('resource_id')
-          .in('category_id', filters.categoryIds)
-      );
+      const { data: categoryResources } = await supabase
+        .from('resource_categories')
+        .select('resource_id')
+        .in('category_id', filters.categoryIds);
+      
+      if (categoryResources && categoryResources.length > 0) {
+        const resourceIds = categoryResources.map(rc => rc.resource_id);
+        query = query.in('id', resourceIds);
+      }
     }
 
     // Tag filter (requires join)
     if (filters.tagIds && filters.tagIds.length > 0) {
-      query = query.in('id',
-        supabase
-          .from('resource_tags')
-          .select('resource_id')
-          .in('tag_id', filters.tagIds)
-      );
+      const { data: tagResources } = await supabase
+        .from('resource_tags')
+        .select('resource_id')
+        .in('tag_id', filters.tagIds);
+      
+      if (tagResources && tagResources.length > 0) {
+        const resourceIds = tagResources.map(rt => rt.resource_id);
+        query = query.in('id', resourceIds);
+      }
     }
 
     // Sorting
@@ -175,12 +181,15 @@ export const searchService = {
       // This is a simplified approach - for better results, you might want to
       // create a stored procedure that calculates similarity scores
       if (categoryIds.length > 0) {
-        query = query.in('id',
-          supabase
-            .from('resource_categories')
-            .select('resource_id')
-            .in('category_id', categoryIds)
-        );
+        const { data: categoryResources } = await supabase
+          .from('resource_categories')
+          .select('resource_id')
+          .in('category_id', categoryIds);
+        
+        if (categoryResources && categoryResources.length > 0) {
+          const resourceIds = categoryResources.map(rc => rc.resource_id);
+          query = query.in('id', resourceIds);
+        }
       }
     } else {
       // Fallback to same type and level

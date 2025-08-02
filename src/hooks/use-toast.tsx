@@ -1,5 +1,5 @@
 import * as React from "react"
-import { toast, ToastOptions } from "sonner"
+import { toast } from "sonner"
 
 export interface Toast {
   id: string
@@ -16,7 +16,7 @@ export const useToast = () => {
     variant?: "default" | "destructive"
     action?: React.ReactNode
   }) => {
-    const options: ToastOptions = {
+    const options = {
       description: props.description,
     }
 

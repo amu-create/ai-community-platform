@@ -40,25 +40,25 @@ export const sanitize = {
   // 기본 HTML 살균
   html: (dirty: string): string => {
     if (typeof window === 'undefined') return dirty; // SSR 대응
-    return DOMPurify.sanitize(dirty, defaultConfig);
+    return (DOMPurify.sanitize(dirty, defaultConfig as any) as unknown) as string;
   },
 
   // 엄격한 HTML 살균
   strict: (dirty: string): string => {
     if (typeof window === 'undefined') return dirty;
-    return DOMPurify.sanitize(dirty, strictConfig);
+    return (DOMPurify.sanitize(dirty, strictConfig as any) as unknown) as string;
   },
 
   // 마크다운 렌더링용 살균
   markdown: (dirty: string): string => {
     if (typeof window === 'undefined') return dirty;
-    return DOMPurify.sanitize(dirty, markdownConfig);
+    return (DOMPurify.sanitize(dirty, markdownConfig as any) as unknown) as string;
   },
 
   // 텍스트만 추출 (HTML 태그 모두 제거)
   text: (dirty: string): string => {
     if (typeof window === 'undefined') return dirty;
-    return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+    return (DOMPurify.sanitize(dirty, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) as unknown) as string;
   },
 
   // URL 살균

@@ -7,7 +7,7 @@ import { AppError, UnauthorizedError, BadRequestError } from '@/lib/errors';
 // 사용자 활동 추적
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 // 사용자 관심사 분석
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();

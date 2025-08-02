@@ -72,10 +72,7 @@ export class UserProfileAnalysisService extends BaseAIService {
 
       return interests;
     } catch (error) {
-      logger.error('User interest analysis failed', {
-        userId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error('User interest analysis failed', error instanceof Error ? error : new Error('Unknown error'), { userId });
       throw error;
     }
   }
@@ -132,7 +129,7 @@ export class UserProfileAnalysisService extends BaseAIService {
       });
 
     if (error) {
-      logger.error('Failed to save user interests', { userId, error });
+      logger.error('Failed to save user interests', new Error('See metadata'), { userId, error });
       throw error;
     }
   }
@@ -155,7 +152,7 @@ export class UserProfileAnalysisService extends BaseAIService {
         });
 
       if (error) {
-        logger.error('Failed to track user activity', { activity, error });
+        logger.error('Failed to track user activity', new Error('See metadata'), { activity, error });
         throw error;
       }
 
@@ -164,7 +161,7 @@ export class UserProfileAnalysisService extends BaseAIService {
         this.scheduleInterestUpdate(activity.metadata.userId);
       }
     } catch (error) {
-      logger.error('Activity tracking failed', { error });
+      logger.error('Activity tracking failed', new Error('See metadata'), { error });
     }
   }
 
@@ -186,7 +183,7 @@ export class UserProfileAnalysisService extends BaseAIService {
         const activities = await this.getUserActivities(userId, 100);
         await this.analyzeUserInterests(userId, activities);
       } catch (error) {
-        logger.error('Scheduled interest update failed', { userId, error });
+        logger.error('Scheduled interest update failed', new Error('See metadata'), { userId, error });
       }
       this.updateSchedule.delete(userId);
     }, 5 * 60 * 1000);
@@ -206,7 +203,7 @@ export class UserProfileAnalysisService extends BaseAIService {
       .limit(limit);
 
     if (error) {
-      logger.error('Failed to get user activities', { userId, error });
+      logger.error('Failed to get user activities', new Error('See metadata'), { userId, error });
       return [];
     }
 

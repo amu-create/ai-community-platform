@@ -6,7 +6,7 @@ import { AppError, UnauthorizedError, BadRequestError, NotFoundError } from '@/l
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     // 인증 확인
     const { data: { session } } = await supabase.auth.getSession();
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 // 유사 콘텐츠 찾기
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { searchParams } = new URL(req.url);
     const contentId = searchParams.get('contentId');
     const limit = parseInt(searchParams.get('limit') || '5');

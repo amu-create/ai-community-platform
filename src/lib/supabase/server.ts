@@ -1,8 +1,8 @@
 import { createServerClient as _createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const createServerClient = () => {
-  const cookieStore = cookies()
+export const createServerClient = async () => {
+  const cookieStore = await cookies()
 
   return _createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

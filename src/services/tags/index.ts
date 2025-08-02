@@ -101,7 +101,7 @@ export const tagService = {
       .eq('resource_id', resourceId);
 
     if (error) throw error;
-    return data?.map(item => item.tag).filter(Boolean) || [];
+    return data?.map((item: any) => item.tag).filter(Boolean) as Tag[] || [];
   },
 
   async setResourceTags(resourceId: string, tagIds: string[]): Promise<void> {

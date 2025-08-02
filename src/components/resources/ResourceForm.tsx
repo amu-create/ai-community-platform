@@ -27,9 +27,9 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { resourceService } from '@/services/resources';
-import { categoryService } from '@/services/categories';
-import { tagService } from '@/services/tags';
+import { resourceService } from '@/services/resource.service';
+import { CategoryService } from '@/services/category.service';
+import { TagService } from '@/services/category.service';
 import { CategorySelector } from '@/components/categories/CategorySelector';
 import { TagSelector } from '@/components/categories/TagSelector';
 import type { Resource, ResourceFormData } from '@/types/resource';
@@ -42,7 +42,7 @@ const resourceFormSchema = z.object({
   url: z.string().url('올바른 URL을 입력해주세요.').optional().or(z.literal('')),
   type: z.enum(['article', 'video', 'course', 'tool', 'book', 'tutorial', 'other']),
   level: z.enum(['beginner', 'intermediate', 'advanced', 'all']),
-  status: z.enum(['draft', 'published']).optional()
+  status: z.enum(['draft', 'published', 'archived']).optional()
 });
 
 interface ResourceFormProps {
@@ -69,8 +69,8 @@ export function ResourceForm({ resource, onSuccess }: ResourceFormProps) {
     
     try {
       const [categories, tags] = await Promise.all([
-        categoryService.getResourceCategories(resource.id),
-        tagService.getResourceTags(resource.id)
+        CategoryService.getResourceCategories(resource.id),
+        TagService.getResourceTags(resource.id)
       ]);
       
       if (categories.length > 0) {
@@ -105,8 +105,8 @@ export function ResourceForm({ resource, onSuccess }: ResourceFormProps) {
         
         // Update categories and tags
         await Promise.all([
-          categoryService.setResourceCategories(resource.id, selectedCategory ? [selectedCategory] : []),
-          tagService.setResourceTags(resource.id, selectedTags.map(t => t.id))
+          CategoryService.setResourceCategories(resource.id, selectedCategory ? [selectedCategory] : []),
+          TagService.setResourceTags(resource.id, selectedTags.map(t => t.id))
         ]);
         
         toast({
@@ -118,8 +118,8 @@ export function ResourceForm({ resource, onSuccess }: ResourceFormProps) {
         
         // Add categories and tags to new resource
         await Promise.all([
-          categoryService.setResourceCategories(result.id, selectedCategory ? [selectedCategory] : []),
-          tagService.setResourceTags(result.id, selectedTags.map(t => t.id))
+          CategoryService.setResourceCategories(result.id, selectedCategory ? [selectedCategory] : []),
+          TagService.setResourceTags(result.id, selectedTags.map(t => t.id))
         ]);
         
         toast({

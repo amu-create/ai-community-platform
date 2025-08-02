@@ -55,7 +55,7 @@ const sortOptions = [
 export function ResourceFilter({ filters, onFiltersChange }: ResourceFilterProps) {
   const [search, setSearch] = useState(filters.search || '');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
 
@@ -90,9 +90,9 @@ export function ResourceFilter({ filters, onFiltersChange }: ResourceFilterProps
     onFiltersChange({ ...filters, categoryIds });
   };
 
-  const handleTagChange = (tagIds: string[]) => {
-    setSelectedTags(tagIds);
-    onFiltersChange({ ...filters, tagIds });
+  const handleTagChange = (tags: Tag[]) => {
+    setSelectedTags(tags);
+    onFiltersChange({ ...filters, tagIds: tags.map(t => t.id) });
   };
 
   const handleReset = () => {
@@ -258,15 +258,8 @@ export function ResourceFilter({ filters, onFiltersChange }: ResourceFilterProps
               <h4 className="font-medium">태그 선택</h4>
               <TagSelector
                 selectedTags={selectedTags}
-                onTagSelect={(id) => {
-                  const newTags = [...selectedTags, id];
-                  handleTagChange(newTags);
-                }}
-                onTagDeselect={(id) => {
-                  const newTags = selectedTags.filter(t => t !== id);
-                  handleTagChange(newTags);
-                }}
-                allowCreate={false}
+                onTagsChange={handleTagChange}
+                placeholder="태그 검색..."
               />
             </div>
           </PopoverContent>
@@ -292,22 +285,19 @@ export function ResourceFilter({ filters, onFiltersChange }: ResourceFilterProps
               </Badge>
             ) : null;
           })}
-          {selectedTags.map(tagId => {
-            const tag = tags.find(t => t.id === tagId);
-            return tag ? (
-              <Badge
-                key={tagId}
-                variant="outline"
-                className="cursor-pointer"
-                onClick={() => {
-                  const newTags = selectedTags.filter(t => t !== tagId);
-                  handleTagChange(newTags);
-                }}
-              >
-                #{tag.name} ×
-              </Badge>
-            ) : null;
-          })}
+          {selectedTags.map(tag => (
+            <Badge
+              key={tag.id}
+              variant="outline"
+              className="cursor-pointer"
+              onClick={() => {
+                const newTags = selectedTags.filter(t => t.id !== tag.id);
+                handleTagChange(newTags);
+              }}
+            >
+              #{tag.name} ×
+            </Badge>
+          ))}
         </div>
       )}
     </div>

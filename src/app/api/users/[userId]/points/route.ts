@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { userId } = await params;
 
     // 사용자 포인트 정보 가져오기

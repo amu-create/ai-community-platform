@@ -30,8 +30,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
-import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/authStore';
+import { supabase } from '@/lib/supabase/client';
 
 const navigation = [
   { name: '대시보드', href: '/dashboard', icon: Home },
@@ -45,14 +45,14 @@ const navigation = [
 
 export function DashboardNav() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('user');
 
   useEffect(() => {
     const fetchUserRole = async () => {
       if (user) {
-        const supabase = createClient();
         const { data } = await supabase
           .from('profiles')
           .select('role')
@@ -177,7 +177,7 @@ export function DashboardNav() {
                   </>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                <DropdownMenuItem onClick={logout} className="cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   로그아웃
                 </DropdownMenuItem>
@@ -303,7 +303,7 @@ export function DashboardNav() {
                 variant="ghost"
                 className="w-full justify-start px-3"
                 onClick={() => {
-                  signOut();
+                  logout();
                   setMobileMenuOpen(false);
                 }}
               >

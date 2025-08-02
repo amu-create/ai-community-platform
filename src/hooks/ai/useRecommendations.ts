@@ -39,7 +39,7 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
-  const { error, setError, clearError } = useApiError();
+  const { error, handleError, clearError } = useApiError();
 
   const fetchRecommendations = useCallback(async () => {
     setLoading(true);
@@ -76,11 +76,11 @@ export function useRecommendations(options: UseRecommendationsOptions = {}) {
       const data = await response.json();
       setRecommendations(data.recommendations);
     } catch (err) {
-      setError(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
-  }, [type, limit, contentTypes, excludeIds, contentId, timeWindow, clearError, setError]);
+  }, [type, limit, contentTypes, excludeIds, contentId, timeWindow, clearError, handleError]);
 
   // 추천 클릭 추적
   const trackClick = useCallback(async (clickedContentId: string) => {
@@ -121,7 +121,7 @@ interface TrackActivityOptions {
 }
 
 export function useActivityTracking(options: TrackActivityOptions = {}) {
-  const { error, setError, clearError } = useApiError();
+  const { error, handleError, clearError } = useApiError();
   const [tracking, setTracking] = useState(false);
 
   const trackActivity = useCallback(async (
@@ -152,12 +152,12 @@ export function useActivityTracking(options: TrackActivityOptions = {}) {
       options.onSuccess?.();
     } catch (err) {
       const error = err as Error;
-      setError(error);
+      handleError(error);
       options.onError?.(error);
     } finally {
       setTracking(false);
     }
-  }, [clearError, setError, options]);
+  }, [clearError, handleError, options]);
 
   // 체류 시간 추적
   const trackViewDuration = useCallback((
@@ -196,7 +196,7 @@ export function useContentAnalysis(
   const { autoAnalyze = true, forceReanalyze = false } = options;
   const [analysis, setAnalysis] = useState<any>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const { error, setError, clearError } = useApiError();
+  const { error, handleError, clearError } = useApiError();
 
   const analyzeContent = useCallback(async () => {
     if (!contentId) return;
@@ -221,11 +221,11 @@ export function useContentAnalysis(
       const data = await response.json();
       setAnalysis(data.analysis);
     } catch (err) {
-      setError(err);
+      handleError(err);
     } finally {
       setAnalyzing(false);
     }
-  }, [contentId, forceReanalyze, clearError, setError]);
+  }, [contentId, forceReanalyze, clearError, handleError]);
 
   // 유사 콘텐츠 찾기
   const [similarContents, setSimilarContents] = useState<any[]>([]);
@@ -276,7 +276,7 @@ export function useContentAnalysis(
 export function useUserInterests() {
   const [interests, setInterests] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const { error, setError, clearError } = useApiError();
+  const { error, handleError, clearError } = useApiError();
 
   const fetchInterests = useCallback(async (forceUpdate = false) => {
     setLoading(true);
@@ -297,11 +297,11 @@ export function useUserInterests() {
       const data = await response.json();
       setInterests(data.interests);
     } catch (err) {
-      setError(err);
+      handleError(err);
     } finally {
       setLoading(false);
     }
-  }, [clearError, setError]);
+  }, [clearError, handleError]);
 
   return {
     interests,

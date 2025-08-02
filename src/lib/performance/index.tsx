@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 import { ComponentType } from 'react';
+import React from 'react';
 
 // 로딩 컴포넌트
 export const LoadingSpinner = () => (
@@ -16,12 +17,12 @@ export const LoadingSkeleton = ({ className = '' }: { className?: string }) => (
 export function lazyLoad<T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   options?: {
-    loading?: ComponentType;
+    loading?: () => React.ReactElement;
     ssr?: boolean;
   }
 ) {
   return dynamic(importFunc, {
-    loading: options?.loading || LoadingSpinner,
+    loading: options?.loading || (() => <LoadingSpinner />),
     ssr: options?.ssr ?? true,
   });
 }

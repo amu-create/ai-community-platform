@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = createClientComponentClient();
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
 
   // 메시지 로드
   useEffect(() => {

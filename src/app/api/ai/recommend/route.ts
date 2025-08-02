@@ -4,7 +4,7 @@ import { AIRecommendationEngine } from '@/lib/ai/recommendation-engine';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     // 사용자 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 // 추천 피드백 처리
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
