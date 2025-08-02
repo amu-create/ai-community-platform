@@ -156,12 +156,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
       const { data, error } = await supabase.storage
         .from('chat-files')
-        .upload(fileName, file, {
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setProgress(Math.round(percentage));
-          },
-        });
+        .upload(fileName, file);
 
       if (error) throw error;
 

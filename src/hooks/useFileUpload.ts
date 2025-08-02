@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/auth';
 import { toast } from '@/components/ui/use-toast';
 
 interface UploadOptions {
@@ -69,11 +69,6 @@ export function useFileUpload(roomId: string, options?: UploadOptions) {
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false,
-          // 진행률 추적
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setProgress(Math.round(percentage));
-          },
         });
 
       if (error) throw error;

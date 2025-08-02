@@ -29,3 +29,6 @@ export const createServerClient = async () => {
 }
 
 export const createServerSupabaseClient = createServerClient
+
+// 호환성을 위한 alias
+export const createClient = createServerClient

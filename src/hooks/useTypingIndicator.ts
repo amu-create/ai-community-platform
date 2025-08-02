@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '@/store/auth';
 import debounce from 'lodash/debounce';
 
 interface TypingUser {
@@ -15,8 +15,8 @@ export function useTypingIndicator(roomId: string) {
   const [typingUsers, setTypingUsers] = useState<Map<string, TypingUser>>(new Map());
   const supabase = createClientComponentClient();
   const user = useAuthStore((state) => state.user);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
-  const cleanupIntervalRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 타이핑 중인 사용자 정리 (5초 이상 업데이트 없으면 제거)
   const cleanupTypingUsers = useCallback(() => {
@@ -42,7 +42,7 @@ export function useTypingIndicator(roomId: string) {
       event: 'typing',
       payload: {
         user_id: user.id,
-        username: user.username || 'Unknown',
+        username: user.email?.split('@')[0] || 'Unknown',
         is_typing: isTyping,
         timestamp: Date.now(),
       },
