@@ -61,6 +61,32 @@ export const env = (() => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
       });
       
+      // 브라우저 환경에서는 필수 클라이언트 환경변수만 체크
+      if (typeof window !== 'undefined') {
+        // 클라이언트 사이드에서는 NEXT_PUBLIC_ 환경변수만 필요
+        const clientRequiredVars = {
+          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community-platform.vercel.app',
+          NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'AI Community Platform',
+          NODE_ENV: process.env.NODE_ENV || 'production',
+        };
+        
+        // 최소한의 검증만 수행
+        if (!clientRequiredVars.NEXT_PUBLIC_SUPABASE_URL || !clientRequiredVars.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          throw new Error('필수 환경 변수가 설정되지 않았습니다');
+        }
+        
+        // 나머지 기본값 설정
+        return {
+          ...clientRequiredVars,
+          NEXT_PUBLIC_STORAGE_BUCKET: 'public',
+          MAX_FILE_SIZE: 5 * 1024 * 1024,
+          RATE_LIMIT_WINDOW: 60 * 1000,
+          RATE_LIMIT_MAX_REQUESTS: 100,
+        } as Env;
+      }
+      
       // 개발 환경에서만 상세 에러 표시
       if (process.env.NODE_ENV === 'development') {
         throw new Error(`환경 변수 검증 실패:\n${JSON.stringify(error.issues, null, 2)}`);
