@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -19,7 +19,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock Supabase client
-jest.mock('@/utils/supabase/client', () => ({
+jest.mock('@/lib/supabase/client', () => ({
   createClient: jest.fn(() => ({
     auth: {
       getUser: jest.fn(),

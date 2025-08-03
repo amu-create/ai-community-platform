@@ -1,4 +1,31 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# 기존 lint-staged 실행
 npm run pre-commit
+
+# 환경 변수 체크
+echo "🔍 Checking environment variables..."
+npm run env:check
+
+# Supabase 타입 체크
+echo "🔄 Checking Supabase types..."
+npm run db:types:check
+
+# 변경사항이 있으면 자동으로 추가
+if git diff --quiet src/types/database.types.ts; then
+  echo "✅ Supabase types are up to date"
+else
+  echo "📝 Supabase types updated, adding to commit..."
+  git add src/types/database.types.ts
+fi
+
+# 민감한 정보 스캔
+echo "🔒 Scanning for sensitive information..."
+npm run security:scan
+
+# 작업 세션에 커밋 기록
+if [ -f ".taskmaster/sessions/current-session.json" ]; then
+  COMMIT_MSG=$(git log -1 --pretty=%B)
+  node scripts/ai-session.js note "Commit: $COMMIT_MSG"
+fi

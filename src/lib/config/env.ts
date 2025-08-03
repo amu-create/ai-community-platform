@@ -1,161 +1,101 @@
-/**
- * Environment variable validation and management
- */
-
-type EnvVar = {
-  key: string;
-  required: boolean;
-  description: string;
-  example?: string;
-};
-
-const ENV_VARS: EnvVar[] = [
-  {
-    key: 'NEXT_PUBLIC_SUPABASE_URL',
-    required: true,
-    description: 'Supabase project URL',
-    example: 'https://your-project.supabase.co'
-  },
-  {
-    key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    required: true,
-    description: 'Supabase anonymous/public key',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-  },
-  {
-    key: 'SUPABASE_SERVICE_KEY',
-    required: true,
-    description: 'Supabase service role key (server-side only)',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-  },
-  {
-    key: 'OPENAI_API_KEY',
-    required: false,
-    description: 'OpenAI API key for AI features',
-    example: 'sk-...'
-  },
-  {
-    key: 'NEXT_PUBLIC_APP_URL',
-    required: true,
-    description: 'Application URL',
-    example: 'http://localhost:8080'
-  }
-];
+// 테스트를 위한 환경 변수 검증 함수들
 
 export class EnvError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = 'EnvError';
+    super(message)
+    this.name = 'EnvError'
   }
 }
 
-/**
- * Validates that all required environment variables are set
- * @throws {EnvError} If required environment variables are missing
- */
-export function validateEnv(): void {
-  // Skip validation in client-side
-  if (typeof window !== 'undefined') {
-    return;
-  }
-
-  const missing: string[] = [];
-  const warnings: string[] = [];
-
-  ENV_VARS.forEach(({ key, required, description }) => {
-    const value = process.env[key];
-    
-    if (required && !value) {
-      missing.push(`${key} - ${description}`);
-    } else if (!required && !value) {
-      warnings.push(`${key} - ${description} (optional)`);
-    }
-  });
-
-  if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missing.forEach(m => console.error(`   - ${m}`));
-    throw new EnvError(
-      `Missing required environment variables: ${missing.map(m => m.split(' - ')[0]).join(', ')}`
-    );
-  }
-
-  if (warnings.length > 0 && process.env.NODE_ENV === 'development') {
-    console.warn('⚠️  Missing optional environment variables:');
-    warnings.forEach(w => console.warn(`   - ${w}`));
-  }
-
-  // Additional security checks
-  if (process.env.NODE_ENV === 'production') {
-    // Ensure service key is not exposed to client
-    if (process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY) {
-      throw new EnvError('SUPABASE_SERVICE_KEY should not have NEXT_PUBLIC_ prefix!');
-    }
-
-    // Ensure APP_URL is using HTTPS in production
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (appUrl && !appUrl.startsWith('https://')) {
-      console.warn('⚠️  NEXT_PUBLIC_APP_URL should use HTTPS in production');
-    }
-  }
-
-  console.log('✅ Environment variables validated successfully');
-}
-
-/**
- * Get environment variable value with type safety
- */
-export function getEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    // 클라이언트 사이드에서는 더 친화적인 오류 메시지
-    if (typeof window !== 'undefined') {
-      console.warn(`Environment variable ${key} is not set`);
-      return '';
-    }
-    throw new EnvError(`Environment variable ${key} is not set`);
-  }
-  return value;
-}
-
-/**
- * Get optional environment variable
- */
-export function getOptionalEnv(key: string, defaultValue?: string): string | undefined {
-  return process.env[key] || defaultValue;
-}
-
-/**
- * Environment configuration object with safe defaults
- */
-export const env = {
-  supabase: {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-    serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
-  },
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY || '',
-  },
-  app: {
-    url: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community.vercel.app',
-    env: process.env.NODE_ENV || 'production',
-    isDev: process.env.NODE_ENV === 'development',
-    isProd: process.env.NODE_ENV === 'production',
-  },
-} as const;
-
-/**
- * Generate .env.example file content
- */
-export function generateEnvExample(): string {
-  const lines = ['# AI Community Platform Environment Variables', ''];
+export function validateEnv() {
+  const requiredVars = [
+    'NEXT_PUBLIC_SUPABASE_URL',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  ]
   
-  ENV_VARS.forEach(({ key, description, example, required }) => {
-    lines.push(`# ${description}${required ? ' (Required)' : ' (Optional)'}`);
-    lines.push(`${key}=${example || ''}`);
-    lines.push('');
-  });
+  const missingVars = requiredVars.filter(varName => !process.env[varName])
+  
+  if (missingVars.length > 0) {
+    throw new EnvError(`Missing required environment variables: ${missingVars.join(', ')}`)
+  }
+  
+  // Optional vars warning in development
+  if (process.env.NODE_ENV === 'development') {
+    const optionalVars = [
+      'OPENAI_API_KEY',
+      'DATABASE_URL',
+      'GITHUB_CLIENT_ID',
+      'GOOGLE_CLIENT_ID'
+    ]
+    
+    const missingOptional = optionalVars.filter(varName => !process.env[varName])
+    if (missingOptional.length > 0) {
+      console.warn(`Missing optional environment variables: ${missingOptional.join(', ')}`)
+    }
+  }
+  
+  // Security checks
+  if (process.env.NODE_ENV === 'production') {
+    // Check for public service key
+    if (process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY) {
+      throw new EnvError('Service keys should not have NEXT_PUBLIC_ prefix')
+    }
+    
+    // Check for HTTP in production
+    const httpUrls = Object.keys(process.env)
+      .filter(key => key.includes('URL'))
+      .filter(key => process.env[key]?.startsWith('http://'))
+    
+    if (httpUrls.length > 0) {
+      console.warn(`URLs should use HTTPS in production: ${httpUrls.join(', ')}`)
+    }
+  }
+}
 
-  return lines.join('\n');
+export function getEnv(key: string): string {
+  const value = process.env[key]
+  if (!value) {
+    throw new EnvError(`Environment variable ${key} is not set`)
+  }
+  return value
+}
+
+export function getOptionalEnv(key: string, defaultValue?: string): string | undefined {
+  return process.env[key] || defaultValue
+}
+
+export function getClientEnv(key: string): string {
+  if (!key.startsWith('NEXT_PUBLIC_')) {
+    throw new EnvError(`Client environment variables must start with NEXT_PUBLIC_`)
+  }
+  return getEnv(key)
+}
+
+export function isServerEnv(key: string): boolean {
+  return !key.startsWith('NEXT_PUBLIC_')
+}
+
+export function maskSecretValue(value: string): string {
+  if (value.length < 8) return '***'
+  return value.slice(0, 4) + '...' + value.slice(-4)
+}
+
+export function logEnvStatus() {
+  const publicVars = Object.keys(process.env)
+    .filter(key => key.startsWith('NEXT_PUBLIC_'))
+    .map(key => ({
+      key,
+      value: maskSecretValue(process.env[key] || '')
+    }))
+  
+  const serverVars = Object.keys(process.env)
+    .filter(key => !key.startsWith('NEXT_PUBLIC_') && key !== 'NODE_ENV')
+    .map(key => ({
+      key,
+      present: !!process.env[key]
+    }))
+  
+  console.log('Environment Status:')
+  console.log('Public Variables:', publicVars)
+  console.log('Server Variables:', serverVars)
 }

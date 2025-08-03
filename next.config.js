@@ -79,8 +79,12 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    optimizeCss: false, // 이 옵션이 문제를 일으킬 수 있음
   },
+  
+  // 성능 및 보안 최적화
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: true,
 
   // Webpack 설정
   webpack: (config, { isServer }) => {

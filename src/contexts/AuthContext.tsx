@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/store/authStore'
 import { useUserStore } from '@/store/userStore'
+import { RealtimeNotifications } from '@/components/notifications/realtime-notifications'
 
 interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>
@@ -18,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { setUser, setLoading, logout } = useAuthStore()
+  const { setUser, setLoading, logout, user } = useAuthStore()
   const { setProfile } = useUserStore()
 
   useEffect(() => {
@@ -161,7 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithGithub,
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {user && <RealtimeNotifications />}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {
