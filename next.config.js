@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // CSS 및 스타일 최적화
+  swcMinify: true,
+  
   // Vercel 배포 최적화
   images: {
     domains: ['rxwchcvgzhuokpqsjatf.supabase.co'],
@@ -13,7 +16,9 @@ const nextConfig = {
   
   // 성능 최적화
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
   },
   
   // 번들 최적화
@@ -53,6 +58,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/:all*(css|js)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   },
   
@@ -60,7 +74,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_URL: process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000',
+      : process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community-platform-sage.vercel.app',
   },
   
   // 실험적 기능
@@ -68,10 +82,24 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    optimizeCss: true,
   },
 
   // Webpack 설정
   webpack: (config, { isServer }) => {
+    // CSS 처리 최적화
+    if (!isServer) {
+      config.optimization.splitChunks.cacheGroups = {
+        ...config.optimization.splitChunks.cacheGroups,
+        styles: {
+          name: 'styles',
+          test: /\.(css|scss)$/,
+          chunks: 'all',
+          enforce: true,
+        },
+      };
+    }
+    
     // 번들 분석
     if (process.env.ANALYZE) {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
@@ -85,6 +113,11 @@ const nextConfig = {
     }
     
     return config;
+  },
+  
+  // PostCSS 설정 강제
+  postcssLoaderOptions: {
+    implementation: require('postcss'),
   },
 };
 
