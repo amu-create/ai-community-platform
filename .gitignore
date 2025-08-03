@@ -24,11 +24,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env.example
+!.env.local.example
 
 # vercel
 .vercel
@@ -54,8 +52,7 @@ supabase/.temp
 logs
 *.log
 dev-debug.log
-# Dependency directories
-# Environment variables
+
 # Editor directories and files
 .idea
 .vscode
@@ -64,11 +61,23 @@ dev-debug.log
 *.njsproj
 *.sln
 *.sw?
+
 # OS specific
+.DS_Store
+Thumbs.db
+
 # Task files
 tasks.json
-tasks/ 
-.vercel
-"# Private docs with sensitive info"  
-"deployment-*.txt"  
-"*-api-*.txt" 
+tasks/
+
+# Sensitive files
+*-api-*.txt
+deployment-*.txt
+*보고서*.txt
+작업*.txt
+최종*.txt
+
+# Backup files
+*.bak
+*.backup
+*.old
