@@ -2,9 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // CSS 및 스타일 최적화
-  swcMinify: true,
-  
   // Vercel 배포 최적화
   images: {
     domains: ['rxwchcvgzhuokpqsjatf.supabase.co'],
@@ -82,7 +79,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    optimizeCss: true,
+    optimizeCss: false, // 이 옵션이 문제를 일으킬 수 있음
   },
 
   // Webpack 설정
@@ -113,11 +110,6 @@ const nextConfig = {
     }
     
     return config;
-  },
-  
-  // PostCSS 설정 강제
-  postcssLoaderOptions: {
-    implementation: require('postcss'),
   },
 };
 

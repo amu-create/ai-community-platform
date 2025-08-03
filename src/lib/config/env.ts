@@ -54,6 +54,11 @@ export class EnvError extends Error {
  * @throws {EnvError} If required environment variables are missing
  */
 export function validateEnv(): void {
+  // Skip validation in client-side
+  if (typeof window !== 'undefined') {
+    return;
+  }
+
   const missing: string[] = [];
   const warnings: string[] = [];
 
@@ -103,6 +108,11 @@ export function validateEnv(): void {
 export function getEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
+    // 클라이언트 사이드에서는 더 친화적인 오류 메시지
+    if (typeof window !== 'undefined') {
+      console.warn(`Environment variable ${key} is not set`);
+      return '';
+    }
     throw new EnvError(`Environment variable ${key} is not set`);
   }
   return value;
@@ -116,20 +126,20 @@ export function getOptionalEnv(key: string, defaultValue?: string): string | und
 }
 
 /**
- * Environment configuration object
+ * Environment configuration object with safe defaults
  */
 export const env = {
   supabase: {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    serviceKey: process.env.SUPABASE_SERVICE_KEY!,
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
   },
   openai: {
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY || '',
   },
   app: {
-    url: process.env.NEXT_PUBLIC_APP_URL!,
-    env: process.env.NODE_ENV,
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community.vercel.app',
+    env: process.env.NODE_ENV || 'production',
     isDev: process.env.NODE_ENV === 'development',
     isProd: process.env.NODE_ENV === 'production',
   },
