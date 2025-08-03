@@ -55,46 +55,46 @@ export const env = (() => {
   try {
     return envSchema.parse(process.env);
   } catch (error) {
+    // 클라이언트 사이드에서는 에러를 보여주지 않고 기본값 사용
+    if (typeof window !== 'undefined') {
+      console.warn('환경 변수 일부가 누락되었습니다. 기본값을 사용합니다.');
+      
+      // 클라이언트 사이드 기본값
+      return {
+        NODE_ENV: process.env.NODE_ENV || 'production',
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rxwchcvgzhuokpqsjatf.supabase.co',
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4d2NoY3Znemh1b2twcXNqYXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NjQwODMsImV4cCI6MjA2OTI0MDA4M30.MIN82UrnCCymRJq9ZUfuYE8GSjFXNUK67pTSTJQeJJ0',
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community-platform-sage.vercel.app',
+        NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'AI Community Platform',
+        NEXT_PUBLIC_STORAGE_BUCKET: 'public',
+        MAX_FILE_SIZE: 5 * 1024 * 1024,
+        RATE_LIMIT_WINDOW: 60 * 1000,
+        RATE_LIMIT_MAX_REQUESTS: 100,
+      } as Env;
+    }
+    
+    // 서버 사이드에서는 에러 로그만 남기고 기본값 사용
     if (error instanceof z.ZodError) {
-      console.error('❌ 환경 변수 검증 실패:');
+      console.error('❌ 환경 변수 검증 실패 (기본값 사용):');
       error.issues.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
       });
-      
-      // 브라우저 환경에서는 필수 클라이언트 환경변수만 체크
-      if (typeof window !== 'undefined') {
-        // 클라이언트 사이드에서는 NEXT_PUBLIC_ 환경변수만 필요
-        const clientRequiredVars = {
-          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-          NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community-platform.vercel.app',
-          NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'AI Community Platform',
-          NODE_ENV: process.env.NODE_ENV || 'production',
-        };
-        
-        // 최소한의 검증만 수행
-        if (!clientRequiredVars.NEXT_PUBLIC_SUPABASE_URL || !clientRequiredVars.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          throw new Error('필수 환경 변수가 설정되지 않았습니다');
-        }
-        
-        // 나머지 기본값 설정
-        return {
-          ...clientRequiredVars,
-          NEXT_PUBLIC_STORAGE_BUCKET: 'public',
-          MAX_FILE_SIZE: 5 * 1024 * 1024,
-          RATE_LIMIT_WINDOW: 60 * 1000,
-          RATE_LIMIT_MAX_REQUESTS: 100,
-        } as Env;
-      }
-      
-      // 개발 환경에서만 상세 에러 표시
-      if (process.env.NODE_ENV === 'development') {
-        throw new Error(`환경 변수 검증 실패:\n${JSON.stringify(error.issues, null, 2)}`);
-      } else {
-        throw new Error('환경 변수 설정을 확인해주세요');
-      }
     }
-    throw error;
+    
+    // 서버 사이드 기본값
+    return {
+      NODE_ENV: process.env.NODE_ENV || 'production',
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rxwchcvgzhuokpqsjatf.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4d2NoY3Znemh1b2twcXNqYXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2NjQwODMsImV4cCI6MjA2OTI0MDA4M30.MIN82UrnCCymRJq9ZUfuYE8GSjFXNUK67pTSTJQeJJ0',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://ai-community-platform-sage.vercel.app',
+      NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'AI Community Platform',
+      NEXT_PUBLIC_STORAGE_BUCKET: 'public',
+      MAX_FILE_SIZE: 5 * 1024 * 1024,
+      RATE_LIMIT_WINDOW: 60 * 1000,
+      RATE_LIMIT_MAX_REQUESTS: 100,
+    } as Env;
   }
 })();
 

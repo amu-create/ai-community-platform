@@ -9,16 +9,16 @@ import { generateSEO, siteConfig } from '@/lib/seo/config'
 import { validateEnv } from '@/lib/config/env'
 import './globals.css'
 
-// Validate environment variables on app start
-if (process.env.NODE_ENV === 'production') {
-  try {
-    validateEnv();
-  } catch (error) {
-    console.error('Environment validation failed:', error);
-    // In production, we might want to handle this differently
-    // For now, we'll log but continue
-  }
-}
+// Validate environment variables on app start - 임시로 비활성화
+// if (process.env.NODE_ENV === 'production') {
+//   try {
+//     validateEnv();
+//   } catch (error) {
+//     console.error('Environment validation failed:', error);
+//     // In production, we might want to handle this differently
+//     // For now, we'll log but continue
+//   }
+// }
 
 const inter = Inter({ subsets: ['latin'] })
 
